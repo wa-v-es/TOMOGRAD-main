@@ -1,0 +1,71 @@
+# Code for calculating and plotting gradients from tomography files
+
+# ---- FOR CALCULATING AND PLOTTING THE MAXIMUM GRADIENT (IN ANY AZIMUTH) ----
+#EXECUTION:
+./TOMO_gradient_calc_plot.bsh
+
+#EXPECTED OUTPUT:
+>$ TOMO_gradient_calc_plot.bsh
+searching radius 5
+ Processing layer:S40RTS_2800_2900km.xyz                                      
+ lon_min  -180.000000    
+ lon_max   180.000000    
+ lat_min  -90.0000000    
+ lat_max   90.0000000    
+ Output file:GRADIENT.S40RTS_2800_2900km.xyz 
+
+#EXPECTED OUTPUTS:
+GRADIENT.ps TOMO.grd GRADIENT.grd GRADIENT.S40RTS_2800_2900km.xyz Example_Ouputs
+
+#FORMAT OF GRADIENT.S40RTS_2800_2900km.xyz: lat, lon, gradient, gradient_az, av_standard_deviation (of all directions used)
+
+
+
+# ---- FOR CALCULATING GRADIENTS FROM ALL AZIMUTHS AND PLOTTING GRADIENTS FROM SOME GIVEN AZIMUTH ----
+#EXECUTION:
+./TOMO_gradient_calc_plot_allAZ.bsh
+
+#EXPECTED OUTPUT:
+>$ TOMO_gradient_calc_plot.bsh
+searching radius 5
+ Processing layer:S40RTS_2800_2900km.xyz                                      
+ lon_min  -180.000000    
+ lon_max   180.000000    
+ lat_min  -90.0000000    
+ lat_max   90.0000000    
+ Output file:GRADIENT.S40RTS_2800_2900km.xyz 
+
+#EXPECTED OUTPUTS:
+GRADIENT_60deg.ps TOMO.grd GRADIENT.grd GRADIENT.S40RTS_2800_2900km.xyz Example_Ouputs
+
+#FORMAT OF GRADIENT.S40RTS_2800_2900km.xyz: lat, lon, gradient_at_azimuth, azimuth_of_gradient
+
+
+
+#RULES FOR INPUT FILE (copied out of src/tomo_gradient_beta02_run_center.f90)
+#========================================================================================================
+# Calculate the tomography gradient for each layer
+# Requirement:
+#            1. tomography models are stored in different layer files 
+#            2. each layer is for one depth range
+#            3. first coloumn is latitude ,second coloumn is the longitude,then dvs
+#              3.1. first line is the minimum depth range and maximum depth of this layer
+#            4. model is stored along latitude value line (different longitude)
+#            5. latitude  and longitude order does not matter, as long as the first point
+# is either minimum(increasing) or maximu (decreasing) value. otherwise  my location 
+# searching algorithm would fail.
+# Algorithm:
+#           1. reorganize the location to 2-D array grids
+#           2. for each grid location, calculate great circle sample points for every 1 degree
+# distances for every 10 degree azimuth direction.
+#           3. search for grid locations surrounding these great circle sample points
+#           4. calculate an average dvs using these surrounding grid locations for this sample point
+#           5. so in azimuth direction, you have many sample locations, with different dvs and distance
+# from the grid location
+#           6. Using linear_square to fit a line to get the great for this azimuth directions
+#           7. Get the maximum or minimum ( whichever their absolute value is bigger) of these gradients
+# for different azimuth directions.
+#           8. Then this is the gradient for this grid location, and store the direction of this gradient
+#
+#OUTPUT lat, lon, gradient, gradient_az, av_standard_deviation (of all directions used)
+#=========================================================================================================

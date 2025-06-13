@@ -1,0 +1,98 @@
+#! /bin/bash
+#Script for running TOMOGRAD
+#TOMOGRAD written by Chungpeng Zhao of ASU
+#This script written by Dan Frost of UC Berkeley
+#8.6.2021
+
+#RULES (copied out of src/tomo_gradient_beta02_run_center.f90)
+#========================================================================================================
+# Calculate the tomography gradient for each layer
+# Requirement:
+#            1. tomography models are stored in different layer files
+#            2. each layer is for one depth range
+#            3. first coloumn is latitude ,second coloumn is the longitude,then dvs
+#              3.1. first line is the minimum depth range and maximum depth of this layer
+#            4. model is stored along latitude value line (different longitude)
+#            5. latitude  and longitude order does not matter, as long as the first point
+# is either minimum(increasing) or maximu (decreasing) value. otherwise  my location
+# searching algorithm would fail.
+# Algorithm:
+#           1. reorganize the location to 2-D array grids
+#           2. for each grid location, calculate great circle sample points for every 1 degree
+# distances for every 10 degree azimuth direction.
+#           3. search for grid locations surrounding these great circle sample points
+#           4. calculate an average dvs using these surrounding grid locations for this sample point
+#           5. so in azimuth direction, you have many sample locations, with different dvs and distance
+# from the grid location
+#           6. Using linear_square to fit a line to get the great for this azimuth directions
+#           7. Get the maximum or minimum ( whichever their absolute value is bigger) of these gradients
+# for different azimuth directions.
+#           8. Then this is the gradient for this grid location, and store the direction of this gradient
+#
+#OUTPUT lat, lon, gradient, gradient_az, av_standard_deviation (of all directions used)
+#=========================================================================================================
+
+#Directories
+home_dir="/Users/keyser/Research/TOMOGRAD-main/"
+cd $home_dir
+
+#Compile code
+gfortran $home_dir"src/tomo_gradient_beta02_run_center.f90" $home_dir"src/SUB_Least_Square_Fit_free.f90" $home_dir"src/AZ_LOC_SUBROUTINE.f" -o TOMOGRAD
+
+
+#Input file
+model_file=S40RTS_2800_2900km.xyz  #XYZ of tomography data for input (lon, lat, dvs at 1x1 degree spacing)
+if [ ! -f $model_file ]; then
+    echo "Need $model_file in pwd"
+    exit
+fi
+#output file name will be "GRADIENT."$model_file. Contains: gridlattmp,gridlontmp,gradient (maximum),gradient_az,standard deviation of gradient in all azimuths
+
+#Input parameters
+gradient_radius=5   #Radius over which to calculate gradient (actually uses diameter, so 2*radius in calculation)
+
+#Run program: TOMOGRAD
+echo $model_file > tomofilelist #Create list of tomography files to run through, list many files to run in sequence
+echo searching radius  $gradient_radius
+TOMOGRAD tomofilelist $gradient_radius
+
+
+#-----------
+#Plot output
+#-----------
+outps=GRADIENT.ps
+interp="-I1"
+range="-R-180/180/-90/90"
+frame="-JR15c"
+border="-B90g90/45g45WSen"
+coast_params="-Dc -W0.04c -A10000"
+xoff0="-X3c"; yoff0="-Y3c"
+yoff1="-Y12c"
+scalevar="-D7.5c/-1c/5c/0.25ch"
+
+gmt makecpt -Cpolar -T-3/3/0.1 -D -I -Z > tomo.cpt
+gmt makecpt -Cocean -T0/0.5/0.05 -D -I > grad.cpt
+
+# Set GMT defaults
+gmt gmtset FONT_TITLE 14
+gmt gmtset MAP_TITLE_OFFSET 0.0c
+gmt gmtset FONT_ANNOT_PRIMARY 14
+gmt gmtset FONT_ANNOT_SECONDARY 14
+gmt gmtset FONT_LABEL 14
+gmt gmtset MAP_LABEL_OFFSET 0.1c
+
+#Construct grids
+awk 'NR>1 {print $2, $1, $3}' GRADIENT.$model_file | gmt blockmean $interp $range | gmt surface $interp $range -GGRADIENT.grd
+awk 'NR>1 {print $2, $1, $3}' $model_file | gmt blockmean $interp $range | gmt surface $interp $range -GTOMO.grd
+
+#Plot gradient
+gmt grdimage GRADIENT.grd $range $frame $border -Cgrad.cpt $xoff0 $yoff0 -P -K > $outps
+gmt pscoast $range $frame $coast_params -O -K >> $outps
+gmt psscale $scalevar -Cgrad.cpt -B0.2:"Velocity gradient (% dV/deg)": -O -K >> $outps
+
+#Plot tomography
+gmt grdimage TOMO.grd $range $frame $border:."$model_file - gradient over $gradient_radius degrees": -Ctomo.cpt $yoff1 -P -O -K >> $outps
+gmt pscoast $range $frame $coast_params -O -K >> $outps
+gmt psscale $scalevar -Ctomo.cpt -B1:"Velocity (% dV)": -O >> $outps
+
+gv $outps &
