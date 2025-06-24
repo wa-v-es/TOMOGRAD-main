@@ -6,7 +6,7 @@ directory = "2.5deg_grad_grds/"
 
 azimuths = range(-170, 190, 10)
 
-region = [-158, -142, 58, 69]
+region = [-158, -142, 56, 69]
 
 vmins = []
 vmaxs = []
@@ -25,11 +25,11 @@ avg_vmin = np.mean(vmins)
 avg_vmax = np.mean(vmaxs)
 
 # Output the results
-print("Minimum values:", vmins,'\n')
+# print("Minimum values:", vmins,'\n')
 print("Min of all values:", np.min(vmins))
 print('#######')
-print("Maximum values:", vmaxs)
+# print("Maximum values:", vmaxs)
 print("Max of all values:", np.max(vmaxs))
-
+print('#######')
 print("Average minimum:", avg_vmin)
 print("Average maximum:", avg_vmax)
