@@ -131,7 +131,7 @@ if(lon_max>185)con_lon_sys=1 ! This means it is 360 system
 !-------------------------------------------------------------------------
 outputfilename='GRADIENT.'//tomofilename(i)
 !      form="(F5.1 F7.1 F8.5 F6.1 F8.5)" !Output file format
-      form="(F5.1 F7.1 F11.5 F7.1)" !Output file format
+      form="(F5.1, F7.1, F11.5, F7.1)" !Output file format
 write(*,*)'Output file:',outputfilename
 OPEN(UNIT=11,FILE=outputfilename,ACTION='WRITE',STATUS='UNKNOWN',IOSTAT=status_write)
 WRITE(11,*)layerdepmin(i),layerdepmax(i),radius

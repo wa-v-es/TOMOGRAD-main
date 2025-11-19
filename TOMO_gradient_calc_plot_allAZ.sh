@@ -43,6 +43,8 @@ gfortran $home_dir"src/tomo_gradient_beta02_run_centre_allAZ.f90" $home_dir"src/
 #Input file
 # awk '{printf "%.1f %.1f %.1f\n", $2,$1,$3}' AlaskaMohoOpt_forGrad_.2.XYZ > AlaskaMohoOpt_forGrad_.2_cut.XYZ
 model_file=AlaskaMohoOpt_forGrad_.2_cut.XYZ  #XYZ of tomography data for input (lon, lat, dvs at 1x1 degree spacing)
+model_file=moho_region_interpolated.txt  #XYZ of tomography data for input (lon, lat, dvs at 1x1 degree spacing)
+
 
 if [ ! -f $model_file ]; then
     echo "Need $model_file in pwd"
@@ -72,7 +74,14 @@ TOMOGRAD tomofilelist $gradient_radius
 #-----------
 interp="-I.1"
 range="-R-171/-133/55/71" #-171/-133/56/71
+range="-R-99/-65/27/55" #-171/-133/56/71
+
 range_cal="-R-170/-135/50/75" #-171/-133/56/71
+range_cal="-R-98/-67/30/55" #-171/-133/56/71
+
+range_cut="-R-159.5/-140/56.4/70"
+range_cut="-R-95/-80/32/50"
+
 
 frame="-Jm0.1i"
 # frame="-JS-150/62/10c"
@@ -110,7 +119,9 @@ gmt gmtset MAP_LABEL_OFFSET 0.1c
 
 ###
 #Construct grids
-for azimuth in $(seq -170 10 180); do
+# for azimuth in $(seq -170 10 180); do
+for azimuth in $(seq 10 10 50); do
+
 
 
   # azimuth=60
@@ -118,10 +129,10 @@ for azimuth in $(seq -170 10 180); do
 
   awk 'NR>1 && $4=='$azimuth' {print $2, $1, $3}' GRADIENT.$model_file | gmt blockmean $interp $range_cal | gmt surface $interp $range_cal -GGRADIENT.$azimuth.grd
   # exit
-  gmt grdcut GRADIENT.$azimuth.grd -Gcut_GRADIENT.$azimuth.grd -R-159.5/-140/56.4/70
+  gmt grdcut GRADIENT.$azimuth.grd -Gcut_GRADIENT.$azimuth.grd $range_cut #-R-159.5/-140/56.4/70
   # gmt grdinfo cut_GRADIENT.grd
   ##
-  gmt grdlandmask -R-159.5/-140/56.4/70 -Dc -A10 $interp -NNan/1 -Gmask.grd
+  gmt grdlandmask $range_cut -Dc -A10 $interp -NNan/1 -Gmask.grd
   # gmt grdinfo mask.grd
   # exit
   gmt grdmath cut_GRADIENT.$azimuth.grd mask.grd MUL = grad_mask.$azimuth.grd
@@ -150,10 +161,10 @@ for azimuth in $(seq -170 10 180); do
   # exit
   # mv -f *$azimuth*.txt 2.5deg_grad_grds/
   rm -f *GRAD*.grd
-  mv -f *$azimuth*.grd 2.5deg_grad_grds/
+  mv -f *$azimuth*.grd 2.5deg_grad_grds_TA/
   rm -f mask.grd
 
-  mv -f *$azimuth*.jpg 2.5deg_grad_grds/
+  mv -f *$azimuth*.jpg 2.5deg_grad_grds_TA/
   echo "Azimuth:$azimuth done"
   # exit
 done
