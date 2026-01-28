@@ -43,7 +43,7 @@ gfortran $home_dir"src/tomo_gradient_beta02_run_centre_allAZ.f90" $home_dir"src/
 #Input file
 # awk '{printf "%.1f %.1f %.1f\n", $2,$1,$3}' AlaskaMohoOpt_forGrad_.2.XYZ > AlaskaMohoOpt_forGrad_.2_cut.XYZ
 model_file=AlaskaMohoOpt_forGrad_.2_cut.XYZ  #XYZ of tomography data for input (lon, lat, dvs at 1x1 degree spacing)
-model_file=moho_region_interpolated.txt  #XYZ of tomography data for input (lon, lat, dvs at 1x1 degree spacing)
+model_file=moho_region_interp_regular_near.txt  #XYZ of tomography data for input (lon, lat, dvs at 1x1 degree spacing)
 
 
 if [ ! -f $model_file ]; then
@@ -77,10 +77,10 @@ range="-R-171/-133/55/71" #-171/-133/56/71
 range="-R-99/-65/27/55" #-171/-133/56/71
 
 range_cal="-R-170/-135/50/75" #-171/-133/56/71
-range_cal="-R-98/-67/30/55" #-171/-133/56/71
+range_cal="-R-98/-67/28/55" #-171/-133/56/71
 
 range_cut="-R-159.5/-140/56.4/70"
-range_cut="-R-95/-80/32/50"
+range_cut="-R-97/-74/32/52"
 
 
 frame="-Jm0.1i"
@@ -119,8 +119,8 @@ gmt gmtset MAP_LABEL_OFFSET 0.1c
 
 ###
 #Construct grids
-# for azimuth in $(seq -170 10 180); do
-for azimuth in $(seq 10 10 50); do
+for azimuth in $(seq -170 10 180); do
+# for azimuth in $(seq 10 10 40); do
 
 
 
